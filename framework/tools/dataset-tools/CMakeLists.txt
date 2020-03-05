@@ -37,13 +37,17 @@ if (Boost_FOUND)
     add_library(TUM TUM.cpp)
 	target_link_libraries(TUM slambench-io ${Boost_LIBRARIES})
 	target_include_directories(TUM PRIVATE ${Boost_INCLUDE_DIRS})
+
+	add_library(ETHSLAM ETHSLAM.cpp)
+	target_link_libraries(ETHSLAM slambench-io ${Boost_LIBRARIES})
+	target_include_directories(ETHSLAM PRIVATE ${Boost_INCLUDE_DIRS})
 	
     add_library(ICLNUIM ICLNUIM.cpp)
 	target_link_libraries(ICLNUIM slambench-io)
 	target_include_directories(ICLNUIM PRIVATE ${Boost_INCLUDE_DIRS})
     
 	add_executable(dataset-generator dataset-generator.cpp)
-	target_link_libraries(dataset-generator TUM ICLNUIM ICL EUROCMAV SVO)
+	target_link_libraries(dataset-generator TUM ETHSLAM ICLNUIM ICL EUROCMAV SVO)
 		
 	
 else (Boost_FOUND)
