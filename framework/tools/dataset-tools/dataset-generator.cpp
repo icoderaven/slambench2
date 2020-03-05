@@ -36,6 +36,7 @@
 #include "./include/EUROCMAV.h"
 #include "./include/ICL.h"
 #include "./include/ICLNUIM.h"
+#include "./include/ICLNUIMAUG.h"
 #include "./include/TUM.h"
 #include "./include/ETHSLAM.h"
 #include "./include/SVO.h"
@@ -95,6 +96,8 @@ public :
 			config->reader = new EUROCMAVReader("");
 		} else if (dataset_name == "icl") {
 			config->reader = new ICLReader("");
+		} else if (dataset_name == "iclnuimaug") {
+			config->reader = new ICLNUIMAUGReader("");
 		} else if (dataset_name == "svo") {
 			config->reader = new SVOReader("");
 		}

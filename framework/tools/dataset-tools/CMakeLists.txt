@@ -45,9 +45,13 @@ if (Boost_FOUND)
     add_library(ICLNUIM ICLNUIM.cpp)
 	target_link_libraries(ICLNUIM slambench-io)
 	target_include_directories(ICLNUIM PRIVATE ${Boost_INCLUDE_DIRS})
-    
+	
+	add_library(ICLNUIMAUG ICLNUIMAUG.cpp)
+	target_link_libraries(ICLNUIMAUG slambench-io ${Boost_LIBRARIES})
+	target_include_directories(ICLNUIMAUG PRIVATE ${Boost_INCLUDE_DIRS})
+
 	add_executable(dataset-generator dataset-generator.cpp)
-	target_link_libraries(dataset-generator TUM ETHSLAM ICLNUIM ICL EUROCMAV SVO)
+	target_link_libraries(dataset-generator TUM ETHSLAM ICLNUIMAUG ICLNUIM ICL EUROCMAV SVO)
 		
 	
 else (Boost_FOUND)
