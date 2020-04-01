@@ -50,8 +50,12 @@ if (Boost_FOUND)
 	target_link_libraries(ICLNUIMAUG slambench-io ${Boost_LIBRARIES})
 	target_include_directories(ICLNUIMAUG PRIVATE ${Boost_INCLUDE_DIRS})
 
+	add_library(SCENE3D SCENE3D.cpp)
+	target_link_libraries(SCENE3D slambench-io ${Boost_LIBRARIES})
+	target_include_directories(SCENE3D PRIVATE ${Boost_INCLUDE_DIRS})
+
 	add_executable(dataset-generator dataset-generator.cpp)
-	target_link_libraries(dataset-generator TUM ETHSLAM ICLNUIMAUG ICLNUIM ICL EUROCMAV SVO)
+	target_link_libraries(dataset-generator TUM ETHSLAM SCENE3D ICLNUIMAUG ICLNUIM ICL EUROCMAV SVO)
 		
 	
 else (Boost_FOUND)

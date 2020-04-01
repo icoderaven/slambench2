@@ -7,7 +7,7 @@
 
  */
 
-#include "../dataset-tools/include/ICLNUIMAUG.h"
+#include "../dataset-tools/include/SCENE3D.h"
 
 #include <io/SLAMFile.h>
 #include <io/SLAMFrame.h>
@@ -33,10 +33,10 @@ using namespace slambench::io;
  *
  */
 
-bool analyseICLNUIMAUGFolder(const std::string &dirname) {
+bool analyseSCENE3DFolder(const std::string &dirname) {
   static const std::vector<std::string> requirements = {
       "associations.txt",
-      "groundtruth.txt"};
+      "trajectory.log"};
 
   try {
     if (!boost::filesystem::exists(dirname)) return false;
@@ -65,7 +65,7 @@ bool analyseICLNUIMAUGFolder(const std::string &dirname) {
   return true;
 }
 
-bool loadICLNUIMAUGDepthData(const std::string &dirname, SLAMFile &file, const Sensor::pose_t &pose, const DepthSensor::intrinsics_t &intrinsics, const CameraSensor::distortion_coefficients_t &distortion, const DepthSensor::disparity_params_t &disparity_params, const DepthSensor::disparity_type_t &disparity_type, const int width, const int height) {
+bool loadSCENE3DDepthData(const std::string &dirname, SLAMFile &file, const Sensor::pose_t &pose, const DepthSensor::intrinsics_t &intrinsics, const CameraSensor::distortion_coefficients_t &distortion, const DepthSensor::disparity_params_t &disparity_params, const DepthSensor::disparity_type_t &disparity_type, const int width, const int height) {
   DepthSensor *depth_sensor = new DepthSensor("Depth");
   depth_sensor->Index = 0;
   // TODO: Read from images/aux yaml file?
@@ -86,13 +86,11 @@ bool loadICLNUIMAUGDepthData(const std::string &dirname, SLAMFile &file, const S
   file.Sensors.AddSensor(depth_sensor);
 
   std::string line;
-
-  std::ifstream infile(dirname + "/" + "associations.txt");
-
   boost::smatch match;
 
   const int frame_rate = 25;
   double frame_time = 1.0 / frame_rate;
+  std::ifstream infile(dirname + "/" + "associations.txt");
 
   while (std::getline(infile, line)) {
     if (line.size() == 0) {
@@ -131,7 +129,7 @@ bool loadICLNUIMAUGDepthData(const std::string &dirname, SLAMFile &file, const S
   return true;
 }
 
-bool loadICLNUIMAUGRGBData(const std::string &dirname, SLAMFile &file, const Sensor::pose_t &pose, const CameraSensor::intrinsics_t &intrinsics, const CameraSensor::distortion_coefficients_t &distortion, const int width, const int height) {
+bool loadSCENE3DRGBData(const std::string &dirname, SLAMFile &file, const Sensor::pose_t &pose, const CameraSensor::intrinsics_t &intrinsics, const CameraSensor::distortion_coefficients_t &distortion, const int width, const int height) {
   CameraSensor *rgb_sensor = new CameraSensor("RGB", CameraSensor::kCameraType);
   rgb_sensor->Index = 0;
   rgb_sensor->Width = width;
@@ -193,7 +191,7 @@ bool loadICLNUIMAUGRGBData(const std::string &dirname, SLAMFile &file, const Sen
   return true;
 }
 
-bool loadICLNUIMAUGGreyData(const std::string &dirname, SLAMFile &file, const Sensor::pose_t &pose, const CameraSensor::intrinsics_t &intrinsics, const CameraSensor::distortion_coefficients_t &distortion, const int width, const int height) {
+bool loadSCENE3DGreyData(const std::string &dirname, SLAMFile &file, const Sensor::pose_t &pose, const CameraSensor::intrinsics_t &intrinsics, const CameraSensor::distortion_coefficients_t &distortion, const int width, const int height) {
   CameraSensor *grey_sensor = new CameraSensor("Grey", CameraSensor::kCameraType);
   grey_sensor->Index = 0;
   grey_sensor->Width = width;
@@ -256,7 +254,7 @@ bool loadICLNUIMAUGGreyData(const std::string &dirname, SLAMFile &file, const Se
   return true;
 }
 
-bool loadICLNUIMAUGGroundTruthData(const std::string &dirname, SLAMFile &file) {
+bool loadSCENE3DGroundTruthData(const std::string &dirname, SLAMFile &file) {
   GroundTruthSensor *gt_sensor = new GroundTruthSensor("GroundTruth");
   gt_sensor->Index = file.Sensors.size();
   gt_sensor->Description = "GroundTruthSensor";
@@ -274,35 +272,26 @@ bool loadICLNUIMAUGGroundTruthData(const std::string &dirname, SLAMFile &file) {
   boost::smatch match;
   const int frame_rate = 25;
   double frame_time = 1.0 / frame_rate;
-  std::ifstream infile(dirname + "/" + "groundtruth.txt");
-
+  std::ifstream infile(dirname + "/" + "trajectory.log");
+  int frame_no = 0;
   while (std::getline(infile, line)) {
     if (line.size() == 0) {
       continue;
-    } else if (boost::regex_match(line, match, boost::regex("^\\s*#.*$"))) {
-      continue;
-    } else if (boost::regex_match(line, match, boost::regex("([-0-9.]+)\\s+([-0-9.e]+)\\s+([-0-9.e]+)\\s+([-0-9.e]+)\\s+([-0-9.e]+)\\s+([-0-9.e]+)\\s+([-0-9.e]+)\\s+([-0-9.e]+)$"))) {
-      int frame_no = std::stoi(match[3]);
+    } else if (boost::regex_match(line, match, boost::regex("([-0-9]+)\\s+([-0-9]+)\\s+([0-9]+)$"))) {
+      frame_no = std::stoi(match[3]);
+
       uint64_t total_ns = frame_time * frame_no * 1000000000;
       slambench::TimeStamp ts;
       ts.S = total_ns / 1000000000;
       ts.Ns = total_ns % 1000000000;
 
-      float tx = std::stof(match[2]);
-      float ty = std::stof(match[3]);
-      float tz = std::stof(match[4]);
-
-      float QX = std::stof(match[5]);
-      float QY = std::stof(match[6]);
-      float QZ = std::stof(match[7]);
-      float QW = std::stof(match[8]);
-
-      Eigen::Matrix3f rotationMat = Eigen::Quaternionf(QW, QX, QY, QZ).toRotationMatrix();
+      // Now just read this straight into the matrix
       Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-      pose.block(0, 0, 3, 3) = rotationMat;
-
-      pose.block(0, 3, 3, 1) << tx, ty, tz;
-
+      for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+          infile >> pose(i, j);
+        }
+      }
       SLAMInMemoryFrame *gt_frame = new SLAMInMemoryFrame();
       gt_frame->FrameSensor = gt_sensor;
       gt_frame->Timestamp = ts;
@@ -311,7 +300,6 @@ bool loadICLNUIMAUGGroundTruthData(const std::string &dirname, SLAMFile &file) {
       memcpy(gt_frame->Data, pose.data(), gt_frame->GetSize());
 
       file.AddFrame(gt_frame);
-
     } else {
       std::cerr << "Unknown line:" << line << std::endl;
       return false;
@@ -320,7 +308,7 @@ bool loadICLNUIMAUGGroundTruthData(const std::string &dirname, SLAMFile &file) {
   return true;
 }
 
-SLAMFile *ICLNUIMAUGReader::GenerateSLAMFile() {
+SLAMFile *SCENE3DReader::GenerateSLAMFile() {
   if (!(grey || rgb || depth)) {
     std::cerr << "No sensors defined\n";
     return nullptr;
@@ -328,7 +316,7 @@ SLAMFile *ICLNUIMAUGReader::GenerateSLAMFile() {
 
   std::string dirname = input;
 
-  if (!analyseICLNUIMAUGFolder(dirname)) {
+  if (!analyseSCENE3DFolder(dirname)) {
     std::cerr << "Invalid folder." << std::endl;
     return nullptr;
   }
@@ -356,14 +344,14 @@ SLAMFile *ICLNUIMAUGReader::GenerateSLAMFile() {
   intrinsics_rgb[2] = 319.5 / 640.0;
   intrinsics_rgb[3] = 239.5 / 480.0;
 
-  DepthSensor::disparity_params_t disparity_params = {0.001, 0.0};
+  DepthSensor::disparity_params_t disparity_params = {0.005, 0.0};
   DepthSensor::disparity_type_t disparity_type = DepthSensor::affine_disparity;
 
   /**
 	 * load Depth
 	 */
 
-  if (depth && !loadICLNUIMAUGDepthData(dirname, slamfile, pose, intrinsics_rgb, distortion_rgb, disparity_params, disparity_type, width, height)) {
+  if (depth && !loadSCENE3DDepthData(dirname, slamfile, pose, intrinsics_rgb, distortion_rgb, disparity_params, disparity_type, width, height)) {
     std::cout << "Error while loading depth information." << std::endl;
     delete slamfilep;
     return nullptr;
@@ -373,7 +361,7 @@ SLAMFile *ICLNUIMAUGReader::GenerateSLAMFile() {
 	 * load Grey
 	 */
 
-  if (grey && !loadICLNUIMAUGGreyData(dirname, slamfile, pose, intrinsics_rgb, distortion_rgb, width, height)) {
+  if (grey && !loadSCENE3DGreyData(dirname, slamfile, pose, intrinsics_rgb, distortion_rgb, width, height)) {
     std::cout << "Error while loading Grey information." << std::endl;
     delete slamfilep;
     return nullptr;
@@ -383,7 +371,7 @@ SLAMFile *ICLNUIMAUGReader::GenerateSLAMFile() {
 	 * load RGB
 	 */
 
-  if (rgb && !loadICLNUIMAUGRGBData(dirname, slamfile, pose, intrinsics_rgb, distortion_rgb, width, height)) {
+  if (rgb && !loadSCENE3DRGBData(dirname, slamfile, pose, intrinsics_rgb, distortion_rgb, width, height)) {
     std::cout << "Error while loading RGB information." << std::endl;
     delete slamfilep;
     return nullptr;
@@ -392,7 +380,7 @@ SLAMFile *ICLNUIMAUGReader::GenerateSLAMFile() {
   /**
 	 * load GT
 	 */
-  if (gt && !loadICLNUIMAUGGroundTruthData(dirname, slamfile)) {
+  if (gt && !loadSCENE3DGroundTruthData(dirname, slamfile)) {
     std::cout << "Error while loading gt information." << std::endl;
     delete slamfilep;
     return nullptr;

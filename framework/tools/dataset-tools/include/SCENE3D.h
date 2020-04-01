@@ -7,8 +7,8 @@
 
  */
 
-#ifndef FRAMEWORK_TOOLS_DATASET_TOOLS_INCLUDE_ICLNUIMAUG_H_
-#define FRAMEWORK_TOOLS_DATASET_TOOLS_INCLUDE_ICLNUIMAUG_H_
+#ifndef FRAMEWORK_TOOLS_DATASET_TOOLS_INCLUDE_SCENE3D_H_
+#define FRAMEWORK_TOOLS_DATASET_TOOLS_INCLUDE_SCENE3D_H_
 
 #include <ParameterComponent.h>
 #include <ParameterManager.h>
@@ -24,14 +24,14 @@ namespace slambench {
 
 namespace io {
 
-class ICLNUIMAUGReader : public DatasetReader {
+class SCENE3DReader : public DatasetReader {
  
  public:
   std::string input;
   bool grey = true, rgb = true, depth = true, gt = true;
 
-  ICLNUIMAUGReader(std::string name) : DatasetReader(name) {
-    this->addParameter(TypedParameter<std::string>("i", "input-directory", "path of the ICLNUIMAUG dataset directory", &this->input, NULL));
+  SCENE3DReader(std::string name) : DatasetReader(name) {
+    this->addParameter(TypedParameter<std::string>("i", "input-directory", "path of the SCENE3D dataset directory", &this->input, NULL));
     this->addParameter(TypedParameter<bool>("grey", "grey", "set to true or false to specify if the GREY stream need to be include in the slam file.", &this->grey, NULL));
     this->addParameter(TypedParameter<bool>("rgb", "rgb", "set to true or false to specify if the RGB stream need to be include in the slam file.", &this->rgb, NULL));
     this->addParameter(TypedParameter<bool>("depth", "depth", "set to true or false to specify if the DEPTH stream need to be include in the slam file.", &this->depth, NULL));
@@ -44,4 +44,4 @@ class ICLNUIMAUGReader : public DatasetReader {
 }
 }
 
-#endif /* FRAMEWORK_TOOLS_DATASET_TOOLS_INCLUDE_ICLNUIMAUG_H_ */
+#endif /* FRAMEWORK_TOOLS_DATASET_TOOLS_INCLUDE_SCENE3D_H_ */
